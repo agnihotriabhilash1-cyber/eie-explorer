@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EIE Video Explorer</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#ffffff;--bg2:#f5f4f0;--bg3:#eeede9;
+  --text:#1a1a18;--text2:#6b6a65;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+  --accent:#5046e5;--accent-bg:#eeedfe;--accent-text:#3c3489;
+  --radius:10px;--radius-lg:14px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1a;--bg2:#252522;--bg3:#2e2e2b;
+    --text:#f0efe9;--text2:#9b9a94;
+    --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+    --accent:#9f9bf8;--accent-bg:#26215c;--accent-text:#cecbf6;
+  }
+}
+body{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;}
+.page{max-width:1140px;margin:0 auto;padding:2rem 1.25rem 4rem;}
+h1{font-size:26px;font-weight:600;letter-spacing:-0.5px;margin-bottom:4px;}
+h1 span{color:var(--accent);}
+.subtitle{font-size:14px;color:var(--text2);margin-bottom:2rem;}
+.surface{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.25rem;}
+.row{display:flex;gap:8px;margin-bottom:8px;}
+.row:last-child{margin-bottom:0;}
+input[type=password],input[type=text],select{padding:9px 13px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg2);color:var(--text);outline:none;width:100%;}
+input[type=password]:focus,input[type=text]:focus{border-color:var(--accent);}
+select{background:var(--bg);cursor:pointer;}
+.btn{padding:9px 18px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:14px;cursor:pointer;white-space:nowrap;transition:background 0.12s;}
+.btn:hover{background:var(--bg2);}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{opacity:0.88;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.help{font-size:12px;color:var(--text2);margin-top:10px;line-height:1.7;}
+.help a{color:var(--accent);}
+/* tabs */
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:0.5px solid var(--border);}
+.tab{padding:8px 16px;font-size:14px;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-0.5px;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+/* controls */
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;}
+.controls input[type=text]{flex:1;min-width:180px;}
+.controls select{width:auto;}
+/* filter row */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem;}
+.filter-row .lbl{font-size:12px;color:var(--text2);white-space:nowrap;}
+.chip{padding:4px 12px;border-radius:20px;border:0.5px solid var(--border2);background:var(--bg);color:var(--text2);font-size:12px;cursor:pointer;transition:all 0.12s;white-space:nowrap;}
+.chip:hover{border-color:var(--accent);color:var(--accent);}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+/* stats bar */
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.25rem;}
+.stat{background:var(--bg2);border-radius:var(--radius);padding:10px 18px;}
+.stat .lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;}
+.stat .val{font-size:20px;font-weight:600;color:var(--text);margin-top:2px;}
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:14px;}
+/* list */
+.list{display:flex;flex-direction:column;gap:8px;}
+.list-item{display:flex;gap:12px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;text-decoration:none;transition:border-color 0.12s;}
+.list-item:hover{border-color:var(--border2);}
+.list-thumb{position:relative;flex-shrink:0;width:160px;aspect-ratio:16/9;background:var(--bg2);overflow:hidden;}
+.list-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.list-body{padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:5px;min-width:0;}
+.list-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.list-desc{font-size:12px;color:var(--text2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.list-meta{font-size:12px;color:var(--text2);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+/* card */
+.vcard{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;text-decoration:none;display:block;transition:border-color 0.15s,transform 0.12s;}
+.vcard:hover{border-color:var(--border2);transform:translateY(-2px);}
+.thumb-wrap{position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--bg2);}
+.thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.dur{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.78);color:#fff;font-size:11px;font-weight:500;padding:2px 6px;border-radius:5px;}
+.vbody{padding:10px 13px 13px;}
+.vtitle{font-size:13px;font-weight:500;color:var(--text);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px;}
+.vmeta{font-size:12px;color:var(--text2);display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+/* expand panel */
+.expand-panel{display:none;padding:10px 13px;border-top:0.5px solid var(--border);background:var(--bg2);font-size:12px;color:var(--text2);line-height:1.6;}
+.expand-panel.open{display:block;}
+.related-vids{margin-top:8px;}
+.related-vids .lbl{font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:6px;}
+.related-link{display:block;font-size:12px;color:var(--accent);text-decoration:none;padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.related-link:hover{text-decoration:underline;}
+/* pills */
+.pill{background:var(--bg2);color:var(--text2);padding:2px 8px;border-radius:20px;font-size:11px;}
+.theme-tag{background:var(--accent-bg);color:var(--accent-text);padding:2px 8px;border-radius:20px;font-size:11px;}
+.speaker-tag{background:#e6f1fb;color:#185fa5;padding:2px 8px;border-radius:20px;font-size:11px;}
+@media(prefers-color-scheme:dark){
+  .speaker-tag{background:#0c447c;color:#b5d4f4;}
+}
+/* status/err */
+.status{text-align:center;font-size:14px;color:var(--text2);padding:2.5rem 0;}
+.theme-status{font-size:12px;color:var(--text2);font-style:italic;padding:4px 0 10px;}
+.err{background:#fcebeb;border:0.5px solid #f09595;border-radius:var(--radius);color:#a32d2d;font-size:13px;padding:10px 14px;margin-bottom:1rem;}
+/* dashboard */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:1.5rem;}
+.dash-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;}
+.dash-card h3{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:12px;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.bar-label{font-size:12px;color:var(--text);width:140px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width 0.4s;}
+.bar-count{font-size:11px;color:var(--text2);width:30px;text-align:right;flex-shrink:0;}
+.top-video{display:flex;gap:10px;align-items:center;margin-bottom:8px;text-decoration:none;}
+.top-video img{width:80px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;flex-shrink:0;}
+.top-video-info .title{font-size:12px;font-weight:500;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.top-video-info .views{font-size:11px;color:var(--text2);margin-top:3px;}
+.year-chart{display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:4px;}
+.year-bar-wrap{display:flex;flex-direction:column;align-items:center;flex:1;}
+.year-bar{width:100%;background:var(--accent);border-radius:3px 3px 0 0;transition:height 0.4s;min-height:2px;}
+.year-bar-lbl{font-size:9px;color:var(--text2);margin-top:3px;transform:rotate(-45deg);white-space:nowrap;}
+/* themes hierarchy */
+.cat-block{margin-bottom:1rem;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.cat-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;}
+.cat-header:hover{background:var(--bg2);}
+.cat-title{font-size:15px;font-weight:500;color:var(--text);}
+.cat-meta{display:flex;align-items:center;gap:10px;}
+.cat-count{font-size:12px;color:var(--text2);}
+.cat-arrow{font-size:12px;color:var(--text2);transition:transform 0.2s;}
+.cat-arrow.open{transform:rotate(90deg);}
+.cat-body{display:none;padding:0 18px 16px;}
+.cat-body.open{display:block;}
+.tag-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer;}
+.tag-row:last-child{border-bottom:none;}
+.tag-row:hover .tag-name{color:var(--accent);}
+.tag-name{font-size:13px;color:var(--text);flex:1;}
+.tag-bar-wrap{width:120px;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;flex-shrink:0;}
+.tag-bar-fill{height:100%;background:var(--accent);border-radius:3px;}
+.tag-count{font-size:12px;color:var(--text2);width:28px;text-align:right;flex-shrink:0;}
+.tag-arrow{font-size:11px;color:var(--text2);flex-shrink:0;}
+.tag-eps{display:none;padding:10px 0 4px 0;}
+.tag-eps.open{display:block;}
+.ep-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid var(--border);text-decoration:none;}
+.ep-row:last-child{border-bottom:none;}
+.ep-row:hover .ep-title{color:var(--accent);}
+.ep-thumb{width:80px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg2);}
+.ep-info{flex:1;min-width:0;}
+.ep-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:3px;}
+.ep-summary{font-size:12px;color:var(--text2);line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ep-meta{font-size:11px;color:var(--text2);display:flex;gap:6px;flex-wrap:wrap;}
+/* view toggle */
+.view-toggle{display:flex;gap:4px;}
+.view-btn{padding:6px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:13px;cursor:pointer;}
+.view-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+/* cache banner */
+.cache-banner{background:var(--accent-bg);border:0.5px solid var(--accent);border-radius:var(--radius);color:var(--accent-text);font-size:13px;padding:9px 14px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+/* graph */
+#graphMount svg{display:block;}
+.g-node{cursor:pointer;}
+.g-node circle{stroke-width:1.5px;transition:r 0.15s;}
+.g-node text{pointer-events:none;font-family:inherit;}
+.g-link{stroke-opacity:0.35;}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>EIE <span>Video Explorer</span></h1>
+  <p class="subtitle">All episodes from Everything is Everything by Amit Varma &amp; Ajay Shah -- search, filter by theme, year and duration &nbsp;·&nbsp; <a href="#" onclick="toggleKeySetup();return false;" style="color:var(--accent);font-size:13px;" id="keyToggleLink">Update API keys</a></p>
+
+  <div class="surface" id="keySetup">
+    <div class="row">
+      <input type="text" id="ytKey" placeholder="YouTube Data API v3 key..." autocomplete="off" spellcheck="false" style="font-family:monospace;"/>
+    </div>
+    <div class="row">
+      <input type="text" id="anthropicKey" placeholder="Anthropic API key (for AI theme + concept detection)..." autocomplete="off" spellcheck="false" style="font-family:monospace;"/>
+      <button class="btn btn-primary" onclick="init()">Load &amp; analyse</button>
+    </div>
+    <p class="help">
+      YouTube key: <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> -- Enable "YouTube Data API v3" then Credentials &rarr; Create API Key.<br>
+      Anthropic key: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> -- API Keys &rarr; Create Key. Both keys stay in your browser only.
+    </p>
+  </div>
+
+  <div id="errBox" class="err" style="display:none;"></div>
+  <div id="refreshBar" style="display:none;text-align:right;margin-bottom:0.5rem;">
+    <button class="btn btn-sm" onclick="init()" style="font-size:12px;">Refresh videos</button>
+  </div>
+  <div id="cacheBanner" class="cache-banner" style="display:none;">
+    <span id="cacheMsg"></span>
+    <button class="btn btn-sm" onclick="clearCache()">Re-analyse</button>
+  </div>
+
+  <div id="mainArea" style="display:none;">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('browse')">Browse</button>
+      <button class="tab" onclick="switchTab('themes')">Themes</button>
+      <button class="tab" onclick="switchTab('graph')">Graph</button>
+      <button class="tab" onclick="switchTab('dashboard')">Insights</button>
+    </div>
+
+    <!-- BROWSE TAB -->
+    <div id="tab-browse" class="tab-panel active">
+      <div class="controls">
+        <input type="text" id="searchInput" placeholder="Search titles and descriptions..." oninput="filterVideos()"/>
+        <select id="sortSel" onchange="filterVideos()">
+          <option value="date_desc">Newest first</option>
+          <option value="date_asc">Oldest first</option>
+          <option value="views_desc">Most viewed</option>
+          <option value="title_asc">A to Z</option>
+        </select>
+        <div class="view-toggle">
+          <button class="view-btn active" id="vbGrid" onclick="setView('grid')" title="Grid">&#9783;</button>
+          <button class="view-btn" id="vbList" onclick="setView('list')" title="List">&#9776;</button>
+        </div>
+      </div>
+
+      <div id="themeStatus" class="theme-status" style="display:none;"></div>
+
+
+      <div id="guestFilterRow" class="filter-row" style="display:none;">
+        <span class="lbl">Guest:</span>
+        <div id="guestChips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+
+      <div id="conceptsFilterRow" class="filter-row" style="display:none;">
+        <span class="lbl">Concepts:</span>
+        <div id="conceptChips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+      <div class="filter-row">
+        <span class="lbl">Year:</span>
+        <div id="yearChips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+
+
+      <div class="stats" id="statsBar"></div>
+      <div id="videoContainer"></div>
+    </div>
+
+    <!-- THEMES TAB -->
+    <div id="tab-themes" class="tab-panel">
+      <div id="themesView"></div>
+    </div>
+
+    <!-- GRAPH TAB -->
+    <div id="tab-graph" class="tab-panel">
+      <div id="graphControls" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+        <span style="font-size:13px;color:var(--text2);">Show:</span>
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="gfEpisodes" checked onchange="buildGraph()"> Episodes</label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="gfTags" checked onchange="buildGraph()"> Tags</label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="gfGuests" checked onchange="buildGraph()"> Guests</label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="gfConcepts" onchange="buildGraph()"> Concepts</label>
+        <span style="font-size:12px;color:var(--text2);margin-left:8px;">Min connections: <input type="range" id="gfMinLinks" min="1" max="5" value="2" style="width:80px;vertical-align:middle;" oninput="document.getElementById('gfMinVal').textContent=this.value;buildGraph()"><span id="gfMinVal" style="font-size:12px;margin-left:4px;">2</span></span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div id="graphMount" style="flex:1;min-width:0;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;"></div>
+        <div id="graphPanel" style="width:260px;flex-shrink:0;display:none;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;font-size:13px;"></div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text2);">Drag nodes to rearrange &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Click a node to explore</div>
+    </div>
+
+    <!-- DASHBOARD TAB -->
+    <div id="tab-dashboard" class="tab-panel">
+      <div class="dash-grid" id="dashGrid"></div>
+    </div>
+  </div>
+
+  <div id="status" class="status"></div>
+</div>
+
+<script>
+const YT = 'https://www.googleapis.com/youtube/v3';
+const CLAUDE = 'https://api.anthropic.com/v1/messages';
+const CACHE_KEY = 'eie_videos_v1';
+
+let ytKey='', anthropicKey='';
+let allVideos=[];
+let activeGuest='All';
+let activeConcepts=new Set(['All']);
+let activeYear='All', activeDuration='all';
+let currentView='grid';
+
+function showErr(m){const b=document.getElementById('errBox');b.textContent=m;b.style.display='block';}
+function toggleKeySetup(){
+  const el=document.getElementById('keySetup');
+  const hidden=el.style.display==='none';
+  el.style.display=hidden?'block':'none';
+  document.getElementById('keyToggleLink').textContent=hidden?'Hide key setup':'Update API keys';
+}
+function clearErr(){document.getElementById('errBox').style.display='none';}
+function setStatus(m){document.getElementById('status').textContent=m;}
+function setThemeStatus(m){const el=document.getElementById('themeStatus');if(m){el.textContent=m;el.style.display='block';}else el.style.display='none';}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['browse','themes','graph','dashboard'][i]===t));
+  document.querySelectorAll('.tab-panel').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  if(t==='dashboard') renderDashboard();
+  if(t==='themes') renderThemesView();
+  if(t==='graph') buildGraph();
+}
+
+function setView(v){
+  currentView=v;
+  document.getElementById('vbGrid').classList.toggle('active',v==='grid');
+  document.getElementById('vbList').classList.toggle('active',v==='list');
+  filterVideos();
+}
+
+// -- Hardcoded keys (fill these in before deploying) --------------------------
+const HARDCODED_YT_KEY = '';        // paste your YouTube Data API v3 key here
+const HARDCODED_ANTHROPIC_KEY = ''; // paste your Anthropic API key here
+const JSONBIN_SECRET = '';          // paste your JSONBin secret key here ($2b$...)
+const JSONBIN_BIN_ID = '';          // leave blank -- auto-created on first run
+// -----------------------------------------------------------------------------
+
+function loadSavedKeys(){
+  const yk = HARDCODED_YT_KEY || localStorage.getItem('eie_yt_key') || '';
+  const ak = HARDCODED_ANTHROPIC_KEY || localStorage.getItem('eie_anthropic_key') || '';
+  if(yk) document.getElementById('ytKey').value = yk;
+  if(ak) document.getElementById('anthropicKey').value = ak;
+  return yk;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const yk = loadSavedKeys();
+  if(yk){
+    document.getElementById('keySetup').style.display = 'none';
+    init();
+  }
+  // If no saved keys, keySetup stays visible so user can enter them
+});
+
+async function init(){
+  try{
+  // Read from input fields first, fall back to hardcoded constants and localStorage
+  const inputYt = (document.getElementById('ytKey').value||'').trim();
+  const inputAk = (document.getElementById('anthropicKey').value||'').trim();
+  ytKey = inputYt || HARDCODED_YT_KEY || localStorage.getItem('eie_yt_key') || '';
+  anthropicKey = inputAk || HARDCODED_ANTHROPIC_KEY || localStorage.getItem('eie_anthropic_key') || '';
+  if(!ytKey){showErr('Please enter a YouTube Data API v3 key.');return;}
+  // Save to localStorage so they persist across sessions
+  if(ytKey) localStorage.setItem('eie_yt_key', ytKey);
+  if(anthropicKey) localStorage.setItem('eie_anthropic_key', anthropicKey);
+  // Hide key setup now that we have keys
+  document.getElementById('keySetup').style.display='none';
+  clearErr();
+  document.getElementById('cacheBanner').style.display='none';
+  document.getElementById('refreshBar').style.display='none';
+  allVideos=[];
+  document.getElementById('mainArea').style.display='none';
+  setStatus('Fetching videos...');
+  await fetchAllPages();
+  if(!allVideos.length) return;
+  await loadCachedMetadata();
+  // Show UI immediately after fetch so videos are visible
+  document.getElementById('mainArea').style.display='block';
+  document.getElementById('refreshBar').style.display='block';
+  setStatus('');
+  buildYearChips();
+  renderGuestChips();
+  renderConceptChips();
+  filterVideos();
+  // Then run AI in background if needed
+  const needsAI=allVideos.some(v=>!v.category||!v.tags||!v.tags.length);
+  const allCached=allVideos.every(v=>v.category&&v.tags&&v.tags.length);
+  if(allCached){
+    showCacheBanner();
+    renderThemesView();
+    renderDashboard();
+    buildGraph();
+    buildGraph();
+  } else if(needsAI && anthropicKey){
+    await detectAIMetadata();
+  }
+  }catch(e){showErr('Error: '+e.message);setStatus('');}
+}
+
+async function loadCachedMetadata(){
+  // Try cloud cache first (JSONBin), fall back to localStorage
+  const binId = JSONBIN_BIN_ID || localStorage.getItem('eie_jsonbin_id');
+  const secret = JSONBIN_SECRET || localStorage.getItem('eie_jsonbin_secret');
+  if(binId && secret){
+    try{
+      setStatus('Loading cache from cloud...');
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+        headers: {'X-Master-Key': secret}
+      });
+      const data = await res.json();
+      const cache = data.record || {};
+      let hits = 0;
+      allVideos.forEach(v=>{
+        if(cache[v.id]){const c=cache[v.id];v.category=c.category||null;v.tags=c.tags||[];v.guest=c.guest||null;v.concepts=c.concepts||[];v.summary=c.summary||null;hits++;}
+      });
+      // Also save to localStorage as offline fallback
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+      if(hits) setThemeStatus(`Loaded ${hits} cached classifications from cloud.`);
+      return;
+    }catch(e){ console.warn('Cloud cache load failed, falling back to localStorage', e); }
+  }
+  // localStorage fallback
+  try{
+    const raw=localStorage.getItem(CACHE_KEY);
+    if(!raw) return;
+    const cache=JSON.parse(raw);
+    allVideos.forEach(v=>{
+      if(cache[v.id]){const c=cache[v.id];v.category=c.category||null;v.tags=c.tags||[];v.guest=c.guest||null;v.concepts=c.concepts||[];v.summary=c.summary||null;}
+    });
+  }catch(e){}
+}
+
+async function saveCache(){
+  // Build cache object
+  const cache={};
+  allVideos.forEach(v=>{if(v.category||v.tags.length) cache[v.id]={category:v.category||null,tags:v.tags||[],guest:v.guest||null,concepts:v.concepts||[],summary:v.summary||null};});
+  // Always save to localStorage
+  try{ localStorage.setItem(CACHE_KEY,JSON.stringify(cache)); }catch(e){}
+  // Save to JSONBin if configured
+  const secret = JSONBIN_SECRET || localStorage.getItem('eie_jsonbin_secret');
+  if(!secret) return;
+  let binId = JSONBIN_BIN_ID || localStorage.getItem('eie_jsonbin_id');
+  try{
+    if(!binId){
+      // Create a new bin
+      const res = await fetch('https://api.jsonbin.io/v3/b', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Master-Key':secret,'X-Bin-Name':'eie-cache','X-Bin-Private':'true'},
+        body: JSON.stringify(cache)
+      });
+      const data = await res.json();
+      binId = data.metadata?.id;
+      if(binId){
+        localStorage.setItem('eie_jsonbin_id', binId);
+        console.log('Created JSONBin:', binId);
+      }
+    } else {
+      // Update existing bin
+      await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':secret},
+        body: JSON.stringify(cache)
+      });
+    }
+  }catch(e){ console.warn('Cloud cache save failed:', e); }
+}
+
+function showCacheBanner(){
+  const cached=allVideos.filter(v=>v.category&&v.tags&&v.tags.length).length;
+  document.getElementById('cacheMsg').textContent=`Loaded AI labels from cloud cache (${cached} videos). Click Re-analyse to refresh.`;
+  document.getElementById('cacheBanner').style.display='flex';
+}
+
+function clearCache(){
+  localStorage.removeItem(CACHE_KEY);
+  localStorage.removeItem('eie_jsonbin_id');
+  allVideos.forEach(v=>{v.category=null;v.tags=[];v.guest=null;v.concepts=[];v.summary=null;});
+  document.getElementById('cacheBanner').style.display='none';
+  if(anthropicKey) detectAIMetadata();
+}
+
+async function fetchAllPages(){
+  // Get channel ID from a known EIE video, then get the uploads playlist
+  const knownVideoId='GG9jDXRaXOo';
+  const vidRes=await fetch(`${YT}/videos?part=snippet&id=${knownVideoId}&key=${ytKey}`);
+  const vidData=await vidRes.json();
+  if(vidData.error){showErr('YouTube API error: '+vidData.error.message);return;}
+  const channelId=vidData.items&&vidData.items[0]&&vidData.items[0].snippet.channelId;
+  if(!channelId){showErr('Could not resolve EIE channel ID.');return;}
+  const chRes=await fetch(`${YT}/channels?part=contentDetails&id=${channelId}&key=${ytKey}`);
+  const chData=await chRes.json();
+  if(chData.error){showErr('YouTube API error: '+chData.error.message);return;}
+  const uploadsId=chData.items&&chData.items[0]&&chData.items[0].contentDetails.relatedPlaylists.uploads;
+  if(!uploadsId){showErr('Could not find uploads playlist.');return;}
+  let pageToken=null;
+  do{
+    setStatus(`Fetching videos... (${allVideos.length} loaded)`);
+    let url=`${YT}/playlistItems?part=contentDetails&playlistId=${uploadsId}&maxResults=50&key=${ytKey}`;
+    if(pageToken) url+=`&pageToken=${pageToken}`;
+    const plRes=await fetch(url);
+    const plData=await plRes.json();
+    if(plData.error){showErr('YouTube API error: '+plData.error.message);break;}
+    const ids=(plData.items||[]).map(i=>i.contentDetails.videoId).join(',');
+    pageToken=plData.nextPageToken||null;
+    if(!ids) break;
+    const detRes=await fetch(`${YT}/videos?part=snippet,statistics,contentDetails&id=${ids}&key=${ytKey}`);
+    const detData=await detRes.json();
+    (detData.items||[]).forEach(v=>{
+      allVideos.push({
+        id:v.id,title:v.snippet.title,desc:v.snippet.description,
+        thumb:((v.snippet.thumbnails.medium||v.snippet.thumbnails.default)||{}).url||'',
+        published:v.snippet.publishedAt,
+        views:parseInt(v.statistics.viewCount||'0'),
+        likes:parseInt(v.statistics.likeCount||'0'),
+        durationSec:isoToSec(v.contentDetails.duration),
+        duration:parseDuration(v.contentDetails.duration),
+        category:null,tags:[],guest:null,concepts:[],summary:null
+      });
+    });
+  }while(pageToken);
+}
+
+async function detectAIMetadata(){
+  setThemeStatus('AI analysing episodes — detecting themes, concepts and guests...');
+  const unprocessed = allVideos.filter(v => !v.category || !v.tags || !v.tags.length);
+  const BATCH = 15;
+  let done = 0;
+  for(let i = 0; i < unprocessed.length; i += BATCH){
+    const batch = unprocessed.slice(i, i + BATCH);
+    setThemeStatus('AI processing... (' + done + ' of ' + unprocessed.length + ' done)');
+    const episodeList = batch.map(v =>
+      '{"id":"' + v.id + '","title":' + JSON.stringify(v.title) + ',"desc":' + JSON.stringify(v.desc.slice(0,300)) + '}'
+    ).join('\n');
+    const prompt = 'You are deeply analysing episodes of "Everything is Everything", a weekly Indian podcast by Amit Varma and Ajay Shah exploring ideas across disciplines.\n\n' +
+      'For each episode return a JSON object with EXACTLY these fields:\n' +
+      '- "id": the episode id as given\n' +
+      '- "category": ONE broad category from: Economics & Policy, Philosophy & Ideas, Science & Technology, History & Society, Politics & Governance, Health & Lifestyle, Arts & Culture, Law & Justice, International Affairs, Finance & Markets\n' +
+      '- "tags": array of 3-5 SPECIFIC topic tags. Be precise and concrete. Examples: "monetary policy", "Indian constitution", "climate change", "evolutionary biology", "drug regulation", "classical music", "media freedom", "cryptocurrency", "public health", "judicial reform". Tags must be lowercase, 1-3 words each.\n' +
+      '- "guest": full name of any guest speaker mentioned in title or description, otherwise null\n' +
+      '- "concepts": array of 3-5 abstract ideas or frameworks explored (e.g. "incentive design", "information asymmetry", "moral philosophy")\n' +
+      '- "summary": ONE sentence, max 20 words, describing exactly what this episode is about\n\n' +
+      'Return ONLY a valid JSON array. No markdown, no code fences, no explanation, no trailing commas.\n\n' +
+      'Episodes:\n' + episodeList;
+    try{
+      const res = await fetch(CLAUDE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 6000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const data = await res.json();
+      if(data.error){ setThemeStatus('AI error: ' + data.error.message); return; }
+      const text = data.content.map(c => c.text || '').join('');
+      const clean = text.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim();
+      const results = JSON.parse(clean);
+      results.forEach(r => {
+        const vid = allVideos.find(v => v.id === r.id);
+        if(vid){
+          vid.category = r.category || null;
+          vid.tags = r.tags || [];
+          vid.guest = r.guest || null;
+          vid.concepts = r.concepts || [];
+          vid.summary = r.summary || null;
+        }
+      });
+      done += batch.length;
+      saveCache();
+          renderGuestChips();
+      renderConceptChips();
+      filterVideos();
+      if(document.getElementById('tab-themes').classList.contains('active')) renderThemesView();
+      if(document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
+      if(document.getElementById('tab-graph').classList.contains('active')) buildGraph();
+    }catch(e){
+      setThemeStatus('AI error: ' + e.message);
+      return;
+    }
+  }
+  setThemeStatus('');
+  saveCache();
+  renderGuestChips();
+  renderConceptChips();
+  filterVideos();
+  renderThemesView();
+  renderDashboard();
+  buildGraph();
+}
+
+function buildYearChips(){
+  const years=['All',...Array.from(new Set(allVideos.map(v=>new Date(v.published).getFullYear()))).sort((a,b)=>b-a)];
+  const wrap=document.getElementById('yearChips');
+  wrap.innerHTML=years.map(y=>`<button class="chip ${y==='All'?'active':''}" onclick="setYear('${y}')">${y}</button>`).join('');
+}
+
+function renderGuestChips(){
+  const guests=Array.from(new Set(allVideos.map(v=>v.guest).filter(Boolean))).sort();
+  if(!guests.length){document.getElementById('guestFilterRow').style.display='none';return;}
+  document.getElementById('guestFilterRow').style.display='flex';
+  const all=['All',...guests];
+  document.getElementById('guestChips').innerHTML=all.map(g=>{
+    const on=activeGuest==='All'?g==='All':activeGuest===g;
+    return `<button class="chip ${on?'active':''}" onclick="setGuest('${g.replace(/'/g,"\'")}')">${esc(g)}</button>`;
+  }).join('');
+}
+
+function renderConceptChips(){
+  const counts={};
+  allVideos.forEach(v=>(v.concepts||[]).forEach(c=>{if(c) counts[c]=(counts[c]||0)+1;}));
+  const topConcepts=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,20).map(e=>e[0]);
+  if(!topConcepts.length){document.getElementById('conceptsFilterRow').style.display='none';return;}
+  document.getElementById('conceptsFilterRow').style.display='flex';
+  const all=['All',...topConcepts];
+  document.getElementById('conceptChips').innerHTML=all.map(c=>{
+    const on=activeConcepts.has('All')?c==='All':activeConcepts.has(c);
+    return `<button class="chip ${on?'active':''}" onclick="toggleConcept('${c.replace(/'/g,"\'")}')">${esc(c)}</button>`;
+  }).join('');
+}
+
+function setGuest(g){
+  activeGuest=g;
+  renderGuestChips();
+  filterVideos();
+}
+
+function toggleConcept(c){
+  if(c==='All'){activeConcepts=new Set(['All']);}
+  else{
+    activeConcepts.delete('All');
+    if(activeConcepts.has(c)) activeConcepts.delete(c);
+    else activeConcepts.add(c);
+    if(!activeConcepts.size) activeConcepts=new Set(['All']);
+  }
+  renderConceptChips();
+  filterVideos();
+}
+
+function setYear(y){
+  activeYear=String(y);
+  document.querySelectorAll('#yearChips .chip').forEach(el=>el.classList.toggle('active',el.textContent===String(y)));
+  filterVideos();
+}
+
+function setDuration(d){
+  activeDuration=d;
+  document.querySelectorAll('#durationFilterRow .chip').forEach(el=>{
+    el.classList.toggle('active', el.getAttribute('onclick')?.includes(`'${d}'`)||false);
+  });
+  filterVideos();
+}
+
+function filterVideos(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const sort=document.getElementById('sortSel').value;
+  let vids=allVideos.filter(v=>{
+    if(q){
+      const hl=highlight(v.title,q);
+      if(!v.title.toLowerCase().includes(q)&&!v.desc.toLowerCase().includes(q)) return false;
+    }
+    if(activeGuest!=='All'&&v.guest!==activeGuest) return false;
+    if(!activeConcepts.has('All')&&!(v.concepts||[]).some(c=>activeConcepts.has(c))) return false;
+    if(activeYear!=='All'&&new Date(v.published).getFullYear()!==parseInt(activeYear)) return false;
+
+    return true;
+  });
+  if(sort==='date_desc') vids.sort((a,b)=>new Date(b.published)-new Date(a.published));
+  else if(sort==='date_asc') vids.sort((a,b)=>new Date(a.published)-new Date(b.published));
+  else if(sort==='views_desc') vids.sort((a,b)=>b.views-a.views);
+  else if(sort==='title_asc') vids.sort((a,b)=>a.title.localeCompare(b.title));
+  renderStats(vids);
+  renderVideos(vids, q);
+}
+
+function renderStats(vids){
+  const tv=vids.reduce((s,v)=>s+v.views,0);
+  document.getElementById('statsBar').innerHTML=`
+    <div class="stat"><div class="lbl">Total</div><div class="val">${allVideos.length}</div></div>
+    <div class="stat"><div class="lbl">Showing</div><div class="val">${vids.length}</div></div>
+    <div class="stat"><div class="lbl">Views</div><div class="val">${fmtN(tv)}</div></div>
+  `;
+}
+
+function renderVideos(vids, q=''){
+  const c=document.getElementById('videoContainer');
+  if(!vids.length){c.innerHTML='';setStatus('No videos match your filters.');return;}
+  setStatus('');
+  if(currentView==='grid'){
+    c.innerHTML=`<div class="grid">${vids.map(v=>cardHTML(v,q)).join('')}</div>`;
+  } else {
+    c.innerHTML=`<div class="list">${vids.map(v=>listItemHTML(v,q)).join('')}</div>`;
+  }
+}
+
+function highlight(text, q){
+  if(!q) return esc(text);
+  const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return esc(text).replace(re,'<mark style="background:#fef08a;color:#1a1a18;border-radius:2px;">$1</mark>');
+}
+
+function cardHTML(v, q){
+  const related=allVideos.filter(r=>r.id!==v.id&&(r.tags||[]).some(t=>(v.tags||[]).includes(t))).slice(0,3);
+  return `<div class="vcard" onclick="toggleExpand('${v.id}')">
+    <div class="thumb-wrap">
+      <img src="${esc(v.thumb)}" alt="" loading="lazy"/>
+      ${v.duration?`<span class="dur">${v.duration}</span>`:''}
+    </div>
+    <div class="vbody">
+      <div class="vtitle">${highlight(v.title,q)}</div>
+      <div class="vmeta">
+        <span>${fmtDate(v.published)}</span>
+        ${v.views?`<span class="pill">${fmtN(v.views)} views</span>`:''}
+        ${(v.tags||[]).slice(0,2).map(t=>`<span class="theme-tag">${esc(t)}</span>`).join('')}
+        ${v.guest?`<span class="speaker-tag">${esc(v.guest)}</span>`:''}
+
+      </div>
+    </div>
+    <div class="expand-panel" id="exp-${v.id}">
+      ${v.summary?`<div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px;line-height:1.5;">${esc(v.summary)}</div>`:''}
+      ${(v.concepts||[]).length?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">${v.concepts.map(c=>`<span style="background:var(--accent-bg);color:var(--accent-text);padding:2px 8px;border-radius:20px;font-size:11px;">${esc(c)}</span>`).join('')}</div>`:''}
+      <div style="margin-bottom:8px;font-size:12px;line-height:1.6;color:var(--text2);">${esc(v.desc.slice(0,280))}${v.desc.length>280?'...':''}</div>
+      <a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener" style="color:var(--accent);font-size:12px;" onclick="event.stopPropagation()">Watch on YouTube &rarr;</a>
+      ${related.length?`<div class="related-vids"><div class="lbl">Related episodes</div>${related.map(r=>`<a class="related-link" href="https://www.youtube.com/watch?v=${r.id}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(r.title)}</a>`).join('')}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function listItemHTML(v, q){
+  return `<a class="list-item" href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">
+    <div class="list-thumb">
+      <img src="${esc(v.thumb)}" alt="" loading="lazy"/>
+      ${v.duration?`<span class="dur">${v.duration}</span>`:''}
+    </div>
+    <div class="list-body">
+      <div class="list-title">${highlight(v.title,q)}</div>
+      <div class="list-desc">${esc(v.desc.slice(0,120))}</div>
+      <div class="list-meta">
+        <span>${fmtDate(v.published)}</span>
+        ${v.views?`<span class="pill">${fmtN(v.views)} views</span>`:''}
+        ${(v.tags||[]).slice(0,2).map(t=>`<span class="theme-tag">${esc(t)}</span>`).join('')}
+        ${v.guest?`<span class="speaker-tag">${esc(v.guest)}</span>`:''}
+
+      </div>
+    </div>
+  </a>`;
+}
+
+function toggleExpand(id){
+  const panel=document.getElementById('exp-'+id);
+  if(!panel) return;
+  panel.classList.toggle('open');
+}
+
+function renderThemesView(){
+  const el = document.getElementById('themesView');
+  if(!allVideos.some(v => v.tags && v.tags.length)){
+    el.innerHTML = '<p style="color:var(--text2);font-size:14px;padding:2rem 0;">Run AI analysis to generate theme groupings.</p>';
+    return;
+  }
+  const hierarchy = {};
+  allVideos.forEach(v => {
+    const cat = v.category || 'Uncategorised';
+    if(!hierarchy[cat]) hierarchy[cat] = {};
+    (v.tags || []).forEach(t => {
+      if(!t) return;
+      if(!hierarchy[cat][t]) hierarchy[cat][t] = [];
+      if(!hierarchy[cat][t].find(e => e.id === v.id)) hierarchy[cat][t].push(v);
+    });
+  });
+  const catsSorted = Object.entries(hierarchy).sort((a,b) => {
+    const ca = Object.values(a[1]).reduce((s,e) => s+e.length, 0);
+    const cb = Object.values(b[1]).reduce((s,e) => s+e.length, 0);
+    return cb - ca;
+  });
+  const parts = [];
+  catsSorted.forEach(function(catEntry, ci){
+    const cat = catEntry[0];
+    const tagMap = catEntry[1];
+    const allTagsSorted = Object.entries(tagMap).sort((a,b) => b[1].length - a[1].length);
+    const maxTagCount = allTagsSorted.length ? allTagsSorted[0][1].length : 1;
+    const totalEps = new Set(Object.values(tagMap).flat().map(v => v.id)).size;
+    const catId = 'cat-' + ci;
+    const isOpen = ci === 0;
+    const tagParts = [];
+    allTagsSorted.forEach(function(tagEntry, ti){
+      const tag = tagEntry[0];
+      const eps = tagEntry[1];
+      const tagId = 'tag-' + ci + '-' + ti;
+      const epsSorted = eps.slice().sort((a,b) => new Date(b.published) - new Date(a.published));
+      const epRows = epsSorted.map(function(v){
+        return '<a class="ep-row" href="https://www.youtube.com/watch?v=' + v.id + '" target="_blank" rel="noopener">' +
+          '<img class="ep-thumb" src="' + esc(v.thumb) + '" alt="" loading="lazy"/>' +
+          '<div class="ep-info">' +
+          '<div class="ep-title">' + esc(v.title) + '</div>' +
+          (v.summary ? '<div class="ep-summary">' + esc(v.summary) + '</div>' : '') +
+          '<div class="ep-meta">' +
+          '<span>' + fmtDate(v.published) + '</span>' +
+          (v.guest ? '<span class="speaker-tag">' + esc(v.guest) + '</span>' : '') +
+          (v.concepts && v.concepts.length ? '<span class="pill">' + esc(v.concepts[0]) + '</span>' : '') +
+          '</div></div></a>';
+      }).join('');
+      const pct = Math.round(eps.length / maxTagCount * 100);
+      tagParts.push(
+        '<div class="tag-row" data-tagid="' + tagId + '">' +
+        '<span class="tag-name">' + esc(tag) + '</span>' +
+        '<div class="tag-bar-wrap"><div class="tag-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<span class="tag-count">' + eps.length + '</span>' +
+        '<span class="tag-arrow" id="arr-' + tagId + '">&#9654;</span>' +
+        '</div>' +
+        '<div class="tag-eps" id="' + tagId + '">' + epRows + '</div>'
+      );
+    });
+    parts.push(
+      '<div class="cat-block">' +
+      '<div class="cat-header" data-catid="' + catId + '">' +
+      '<span class="cat-title">' + esc(cat) + '</span>' +
+      '<div class="cat-meta">' +
+      '<span class="cat-count">' + allTagsSorted.length + ' topics &middot; ' + totalEps + ' episodes</span>' +
+      '<span class="cat-arrow' + (isOpen ? ' open' : '') + '" id="catarr-' + catId + '">&#9654;</span>' +
+      '</div></div>' +
+      '<div class="cat-body' + (isOpen ? ' open' : '') + '" id="' + catId + '">' + tagParts.join('') + '</div>' +
+      '</div>'
+    );
+  });
+  el.innerHTML = parts.join('');
+  el.querySelectorAll('.cat-header').forEach(function(h){
+    h.addEventListener('click', function(){ toggleCat(h.dataset.catid); });
+  });
+  el.querySelectorAll('.tag-row').forEach(function(r){
+    r.addEventListener('click', function(){ toggleTagEps(r.dataset.tagid); });
+  });
+}
+
+function toggleCat(id){
+  const body = document.getElementById(id);
+  const arr = document.getElementById('catarr-' + id);
+  if(!body) return;
+  body.classList.toggle('open');
+  if(arr) arr.classList.toggle('open');
+}
+
+function toggleTagEps(id){
+  const eps = document.getElementById(id);
+  const arr = document.getElementById('arr-' + id);
+  if(!eps) return;
+  eps.classList.toggle('open');
+  if(arr) arr.style.transform = eps.classList.contains('open') ? 'rotate(90deg)' : '';
+}
+
+function renderDashboard(){
+  const dash=document.getElementById('dashGrid');
+  // Category breakdown
+  const themeCounts={};
+  allVideos.forEach(v=>{if(v.category) themeCounts[v.category]=(themeCounts[v.category]||0)+1;});
+  const themesSorted=Object.entries(themeCounts).sort((a,b)=>b[1]-a[1]);
+  const maxT=themesSorted[0]?.[1]||1;
+
+  // Concept breakdown
+  const conceptCounts={};
+  allVideos.forEach(v=>(v.concepts||[]).forEach(c=>{if(c) conceptCounts[c]=(conceptCounts[c]||0)+1;}));
+  const conceptSorted=Object.entries(conceptCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxC=conceptSorted[0]?.[1]||1;
+
+  // Guest episodes
+  const guestEps=allVideos.filter(v=>v.guest).sort((a,b)=>new Date(b.published)-new Date(a.published)).slice(0,5);
+
+  // Top videos by views
+  const topVids=[...allVideos].sort((a,b)=>b.views-a.views).slice(0,5);
+
+  // Uploads per year
+  const yearCounts={};
+  allVideos.forEach(v=>{const y=new Date(v.published).getFullYear();yearCounts[y]=(yearCounts[y]||0)+1;});
+  const years=Object.keys(yearCounts).sort();
+  const maxY=Math.max(...Object.values(yearCounts));
+
+  dash.innerHTML=`
+    <div class="dash-card">
+      <h3>Episodes by category</h3>
+      ${themesSorted.map(([t,n])=>`<div class="bar-row"><div class="bar-label" title="${esc(t)}">${esc(t)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxT*100)}%"></div></div><div class="bar-count">${n}</div></div>`).join('')}
+    </div>
+    <div class="dash-card">
+      <h3>Top concepts</h3>
+      ${conceptSorted.length?conceptSorted.map(([c,n])=>`<div class="bar-row"><div class="bar-label" title="${esc(c)}">${esc(c)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxC*100)}%"></div></div><div class="bar-count">${n}</div></div>`).join(''):'<p style="font-size:13px;color:var(--text2);">Run AI analysis to detect concepts.</p>'}
+    </div>
+
+    <div class="dash-card">
+      <h3>Guest episodes</h3>
+      ${guestEps.length?guestEps.map(v=>`<a class="top-video" href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener"><img src="${esc(v.thumb)}" alt=""/><div class="top-video-info"><div class="title">${esc(v.title)}</div><div class="views">${esc(v.guest||'')} &middot; ${fmtDate(v.published)}</div></div></a>`).join(''):'<p style="font-size:13px;color:var(--text2);">No guest episodes detected yet.</p>'}
+    </div>
+    <div class="dash-card">
+      <h3>Most watched</h3>
+      ${topVids.map(v=>`<a class="top-video" href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener"><img src="${esc(v.thumb)}" alt=""/><div class="top-video-info"><div class="title">${esc(v.title)}</div><div class="views">${fmtN(v.views)} views</div></div></a>`).join('')}
+    </div>
+    <div class="dash-card">
+      <h3>Uploads per year</h3>
+      <div class="year-chart">
+        ${years.map(y=>`<div class="year-bar-wrap"><div class="year-bar" style="height:${Math.round(yearCounts[y]/maxY*72)}px" title="${y}: ${yearCounts[y]} videos"></div><div class="year-bar-lbl">${y}</div></div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function isoToSec(iso){
+  const m=iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if(!m) return 0;
+  return (+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0);
+}
+
+function parseDuration(iso){
+  const m=iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if(!m) return '';
+  const h=+m[1]||0,mn=+m[2]||0,s=+m[3]||0;
+  return h?`${h}:${String(mn).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${mn}:${String(s).padStart(2,'0')}`;
+}
+
+function fmtN(n){
+  if(n>=1e6) return (n/1e6).toFixed(1)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(1)+'K';
+  return String(n);
+}
+
+function fmtDate(iso){
+  return new Date(iso).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+let gSim = null;
+
+function buildGraph(){
+  if(!document.getElementById('tab-graph').classList.contains('active')) return;
+  if(!allVideos.some(v=>v.tags&&v.tags.length)){
+    document.getElementById('graphMount').innerHTML='<p style="padding:2rem;color:var(--text2);font-size:14px;">Run AI analysis first to generate the graph.</p>';
+    return;
+  }
+  const showEps   = document.getElementById('gfEpisodes').checked;
+  const showTags  = document.getElementById('gfTags').checked;
+  const showGuests= document.getElementById('gfGuests').checked;
+  const showConc  = document.getElementById('gfConcepts').checked;
+  const minLinks  = parseInt(document.getElementById('gfMinLinks').value)||1;
+
+  // Count connections per non-episode node
+  const nodeDeg = {};
+  allVideos.forEach(v=>{
+    (v.tags||[]).forEach(t=>{ nodeDeg['tag:'+t]=(nodeDeg['tag:'+t]||0)+1; });
+    if(v.guest) nodeDeg['guest:'+v.guest]=(nodeDeg['guest:'+v.guest]||0)+1;
+    (v.concepts||[]).forEach(c=>{ nodeDeg['concept:'+c]=(nodeDeg['concept:'+c]||0)+1; });
+  });
+
+  const nodesMap = {};
+  const links = [];
+
+  function getOrAdd(id, label, type, meta){
+    if(!nodesMap[id]) nodesMap[id]={id,label,type,meta:meta||{}};
+    return nodesMap[id];
+  }
+
+  allVideos.forEach(v=>{
+    const epNode = showEps ? getOrAdd('ep:'+v.id, v.title.slice(0,40)+(v.title.length>40?'...':''), 'episode', {
+      id:v.id, title:v.title, summary:v.summary, thumb:v.thumb, published:v.published, guest:v.guest
+    }) : null;
+
+    if(showTags)(v.tags||[]).forEach(t=>{
+      if(nodeDeg['tag:'+t]<minLinks) return;
+      const tn=getOrAdd('tag:'+t, t, 'tag', {});
+      if(epNode) links.push({source:epNode.id, target:tn.id, type:'ep-tag'});
+    });
+
+    if(showGuests && v.guest && nodeDeg['guest:'+v.guest]>=minLinks){
+      const gn=getOrAdd('guest:'+v.guest, v.guest, 'guest', {});
+      if(epNode) links.push({source:epNode.id, target:gn.id, type:'ep-guest'});
+    }
+
+    if(showConc)(v.concepts||[]).forEach(c=>{
+      if(nodeDeg['concept:'+c]<minLinks) return;
+      const cn=getOrAdd('concept:'+c, c, 'concept', {});
+      if(epNode) links.push({source:epNode.id, target:cn.id, type:'ep-concept'});
+    });
+  });
+
+  // Remove episode nodes with no links if episodes shown
+  const linkedEpIds = new Set(links.map(l=>[l.source,l.target]).flat());
+  const nodes = Object.values(nodesMap).filter(n=> n.type!=='episode' || linkedEpIds.has(n.id));
+
+  // Build graph
+  const mount = document.getElementById('graphMount');
+  mount.innerHTML='';
+  const W = mount.clientWidth || 800;
+  const H = Math.max(520, Math.round(W*0.65));
+  mount.style.height = H+'px';
+
+  const colors = {episode:'#5046e5', tag:'#1d9e75', guest:'#e05a2b', concept:'#8b5cf6'};
+  // Size tag/concept nodes by connection count
+  const maxDeg = Math.max(1, ...Object.values(nodeDeg));
+  function nodeR(n){
+    if(n.type==='tag'||n.type==='concept'||n.type==='guest'){
+      const d = nodeDeg[n.type+':'+n.label]||1;
+      return 6 + Math.round((d/maxDeg)*10);
+    }
+    return 5;
+  }
+  const radii = {episode:5, tag:9, guest:8, concept:6};
+
+  const svg = d3.select(mount).append('svg').attr('width',W).attr('height',H);
+  const g = svg.append('g');
+
+  svg.call(d3.zoom().scaleExtent([0.2,4]).on('zoom', e=>g.attr('transform',e.transform)));
+
+  if(gSim) gSim.stop();
+  gSim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d=>d.id).distance(d=>d.type==='ep-tag'?60:80).strength(0.4))
+    .force('charge', d3.forceManyBody().strength(-120))
+    .force('center', d3.forceCenter(W/2, H/2))
+    .force('collide', d3.forceCollide().radius(d=>nodeR(d)+4));
+
+  const link = g.append('g').selectAll('line').data(links).join('line')
+    .attr('class','g-link')
+    .attr('stroke', d=>d.type==='ep-guest'?colors.guest:d.type==='ep-concept'?colors.concept:colors.tag)
+    .attr('stroke-width', d=>d.type==='ep-tag'?1.5:1);
+
+  const node = g.append('g').selectAll('g').data(nodes).join('g')
+    .attr('class','g-node')
+    .call(d3.drag()
+      .on('start',(e,d)=>{if(!e.active) gSim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on('drag', (e,d)=>{d.fx=e.x;d.fy=e.y;})
+      .on('end',  (e,d)=>{if(!e.active) gSim.alphaTarget(0);d.fx=null;d.fy=null;}))
+    .on('click', (e,d)=>showGraphPanel(d));
+
+  node.append('circle')
+    .attr('r', d=>nodeR(d))
+    .attr('fill', d=>colors[d.type])
+    .attr('fill-opacity', 0.85)
+    .attr('stroke', d=>colors[d.type])
+    .attr('stroke-opacity', 0.4);
+
+  node.append('title').text(d=>d.label);
+
+  node.append('text')
+    .text(d=>d.type==='episode'?'':d.label.slice(0,20)+(d.label.length>20?'…':''))
+    .attr('x', d=>nodeR(d)+4)
+    .attr('y', 4)
+    .attr('font-size', d=>d.type==='tag'?11:10)
+    .attr('fill', 'var(--text)')
+    .attr('fill-opacity', 0.8);
+
+  // Highlight neighbours on click
+  node.on('click', (e,d)=>{
+    const neighbourIds = new Set(links.filter(l=>l.source.id===d.id||l.target.id===d.id).map(l=>l.source.id===d.id?l.target.id:l.source.id));
+    node.select('circle')
+      .attr('fill-opacity', n=>n.id===d.id||neighbourIds.has(n.id)?1:0.15)
+      .attr('r', n=>n.id===d.id?radii[n.type]*1.6:radii[n.type]);
+    link.attr('stroke-opacity', l=>(l.source.id===d.id||l.target.id===d.id)?0.8:0.05);
+    showGraphPanel(d);
+    e.stopPropagation();
+  });
+  svg.on('click', ()=>{
+    node.select('circle').attr('fill-opacity',0.85).attr('r',d=>nodeR(d));
+    link.attr('stroke-opacity',0.35);
+    document.getElementById('graphPanel').style.display='none';
+  });
+
+  gSim.on('tick', ()=>{
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+        .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    node.attr('transform',d=>'translate('+d.x+','+d.y+')');
+  });
+
+  // Legend
+  const legend = svg.append('g').attr('transform','translate(14,14)');
+  const types = ['episode','tag','guest','concept'].filter(t=>
+    (t==='episode'&&showEps)||(t==='tag'&&showTags)||(t==='guest'&&showGuests)||(t==='concept'&&showConc));
+  types.forEach((t,i)=>{
+    const row = legend.append('g').attr('transform','translate(0,'+(i*18)+')');
+    row.append('circle').attr('r',5).attr('cx',5).attr('fill',colors[t]).attr('fill-opacity',0.85);
+    row.append('text').text(t).attr('x',14).attr('y',4).attr('font-size',11).attr('fill','var(--text)').attr('fill-opacity',0.7);
+  });
+}
+
+function showGraphPanel(d){
+  const panel = document.getElementById('graphPanel');
+  panel.style.display='block';
+  if(d.type==='episode'){
+    const v=d.meta;
+    panel.innerHTML =
+      '<img src="'+esc(v.thumb||'')+'" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;margin-bottom:10px;"/>' +
+      '<div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px;line-height:1.4;">'+esc(v.title)+'</div>' +
+      (v.summary?'<div style="font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5;">'+esc(v.summary)+'</div>':'') +
+      '<div style="font-size:12px;color:var(--text2);margin-bottom:10px;">'+fmtDate(v.published)+(v.guest?' &middot; '+esc(v.guest):'')+'</div>' +
+      '<a href="https://www.youtube.com/watch?v='+v.id+'" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);">Watch on YouTube &rarr;</a>';
+  } else if(d.type==='tag'){
+    const eps=allVideos.filter(v=>(v.tags||[]).includes(d.label));
+    panel.innerHTML =
+      '<div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;">'+esc(d.label)+'</div>' +
+      '<div style="font-size:12px;color:var(--text2);margin-bottom:12px;">'+eps.length+' episodes</div>' +
+      eps.slice(0,6).map(v=>
+        '<a href="https://www.youtube.com/watch?v='+v.id+'" target="_blank" rel="noopener" style="display:block;font-size:12px;color:var(--accent);padding:4px 0;border-bottom:0.5px solid var(--border);text-decoration:none;">'+esc(v.title.slice(0,50))+(v.title.length>50?'...':'')+'</a>'
+      ).join('')+
+      (eps.length>6?'<div style="font-size:11px;color:var(--text2);margin-top:6px;">+' +(eps.length-6)+' more</div>':'');
+  } else if(d.type==='guest'){
+    const eps=allVideos.filter(v=>v.guest===d.label);
+    panel.innerHTML =
+      '<div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;">'+esc(d.label)+'</div>' +
+      '<div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Guest on '+eps.length+' episode'+(eps.length!==1?'s':'')+'</div>' +
+      eps.map(v=>
+        '<a href="https://www.youtube.com/watch?v='+v.id+'" target="_blank" rel="noopener" style="display:block;font-size:12px;color:var(--accent);padding:4px 0;border-bottom:0.5px solid var(--border);text-decoration:none;">'+esc(v.title.slice(0,50))+(v.title.length>50?'...':'')+'</a>'
+      ).join('');
+  } else {
+    const eps=allVideos.filter(v=>(v.concepts||[]).includes(d.label));
+    panel.innerHTML =
+      '<div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;">'+esc(d.label)+'</div>' +
+      '<div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Concept in '+eps.length+' episodes</div>' +
+      eps.slice(0,6).map(v=>
+        '<a href="https://www.youtube.com/watch?v='+v.id+'" target="_blank" rel="noopener" style="display:block;font-size:12px;color:var(--accent);padding:4px 0;border-bottom:0.5px solid var(--border);text-decoration:none;">'+esc(v.title.slice(0,50))+(v.title.length>50?'...':'')+'</a>'
+      ).join('');
+  }
+}
+</script>
+</body>
+</html>
